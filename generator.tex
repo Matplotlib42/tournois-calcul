@@ -1,0 +1,1427 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{ifthen}
+\newboolean{solution}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         CHOIX des PARAMETRES          %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\def\year{2027} % 2027 donne 2026--2027
+\def\tour{1} % 1 ou 2
+\setboolean{solution}{true}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%      Fin du CHOIX des PARAMETRES      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% packages de typesetting
+\usepackage[right=1.5cm,top=1.2cm,left=1.5cm,bottom=1.2cm]{geometry}
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+
+\everymath{\displaystyle}
+\setlength\parindent{0pt}
+\pagestyle{empty}
+
+% packages de calcul
+\usepackage{calc}
+\usepackage{xintexpr}
+\usepackage{xcolor}
+\usepackage{collcell}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage{tikz}
+
+\makeatletter
+
+% empty token list
+\xdef\@@nothing{}
+
+% graine de l'aléatoire
+\csname sys_gset_rand_seed:n\expandafter\endcsname\expandafter{\expanded{\tour\year}}
+
+% affichage des nombres décimaux
+\ExplSyntaxOn
+\def\num#1{\tl_set:Ne \l_tmpa_tl{#1} \tl_replace_once:Nnn\l_tmpa_tl {.}{\mathord{,}} \ensuremath{\tl_use:N \l_tmpa_tl}}
+\ExplSyntaxOff
+
+% affichage des fractions a/b en \frac{a}{b}
+\def\Frac#1{\xintTeXsignedFrac{\xinteval{reduce(#1)}}}
+
+% affichage des solutions ?
+\newcommand*{\showsolution}[1]{%
+    \ifthenelse{\boolean{solution}}{\textcolor{blue}{#1}}{\textcolor{white}{#1}}
+}
+
+% générateur de fraction aléatoire
+\ExplSyntaxOn
+\cs_new:Npn \irrfrac #1#2#3#4 {
+    \irrfrac_aux:eennnn{\int_rand:nn{#1}{#2}}{\int_rand:nn{#3}{#4}}{#1}{#2}{#3}{#4}
+}
+\cs_new:Npn \irrfrac_aux:nnnnnn #1#2#3#4#5#6 {
+    \str_if_eq:eeTF{#1/#2}{\xinteval{reduce(#1/#2)}}{#1/#2}{\irrfrac{#3}{#4}{#5}{#6}}
+}
+\cs_generate_variant:Nn \irrfrac_aux:nnnnnn {eennnn}
+\ExplSyntaxOff
+
+% raccourci entier aléatoire
+\def\randint{\csname int_rand:nn\endcsname}
+\def\choose{\csname tl_rand_item:n\endcsname}
+\def\cchoose{\csname clist_rand_item:n\endcsname}
+
+% raccourci plein entiers
+\def\GENINT#1{%
+    \foreach \i in {#1} {%
+        \expandafter\xdef\csname @@\i\endcsname{\randint2{10}}%
+    }%
+}
+
+% add trailing plus if needed
+\def\@@sign{\@ifnextchar-{}{+}}
+\def\PMSIGN#1{\expandafter\@@sign\expanded{\fpeval{#1}}}
+
+% colonnes personnalisées tableau
+\def\addcellspace{.7cm}
+\newcolumntype{S}{>{\hspace{\addcellspace}\collectcell\showsolution}c<{\endcollectcell\hspace{\addcellspace}}}
+\def\thead#1{\textcolor{black}{\textbf{#1}}}
+
+% mise en page de la page de garde
+\renewcommand{\section}[1]{%
+    \clearpage%
+    \refstepcounter{section}%
+    \makebox[\widthof{Prénom~:}][r]{Nom :}~\rule{4cm}{.8pt}\par%
+    \vspace{.5em}%
+    \makebox[\widthof{Prénom~:}][r]{Prénom :}~\rule{4cm}{.8pt}\par%
+    \vspace{.5em}%
+    \makebox[\widthof{Prénom~:}][r]{Classe :}~\rule{4cm}{.8pt}\par%
+    \vspace{3cm}%
+    \begin{center}%
+        \rule{\linewidth}{1.8pt}\par%
+        \Huge%
+        \textbf{Tournoi de calcul}\par%
+        \Large%
+        \textit{Lycée Geoffroy Saint-Hilaire $-$ \'Edition \the\numexpr\year-1\relax--\year}\par%
+        \rule{\linewidth}{1.8pt}\par%
+        \vspace{3cm}%
+        \Huge%
+        \csname str_case_e:nnF\endcsname\tour{1{Premier}2{Second}}{\textcolor{red}{erreur numéro tour}} tour\par%
+        \Large%
+        Le \csname str_case_e:nnF\endcsname\tour{1{premier}2{second}}{\textcolor{red}{erreur numéro tour}} tour est composé \csname str_case_e:nnF\endcsname\tour{1{de quatre parties}2{d'une partie}}{\textcolor{red}{erreur numéro tour}} de 10 minutes\csname str_case_e:nn\endcsname\tour{1{ chacune}}.\par%
+        \vspace{8cm}%
+        \fbox{\textbf{\Roman{section}}}\;\;#1%
+    \end{center}%
+    \clearpage%
+}
+\def\addblankpage{\clearpage$ $}
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                DOCUMENT               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Calcul avec des nombres relatifs}
+
+\topskip0pt
+\vspace*{\fill}
+{\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|c|S|}
+    \hline \thead{Calculer} & \thead{Réponse} \\
+    \hline%
+        \xdef\@@a{\randint38}%
+        \xdef\@@b{1\randint15}%
+        $-\@@a\times(-\@@b)$ & $\the\numexpr\@@a*\@@b$ \\
+    \hline%
+        \xdef\@@a{1\randint09}%
+        \xdef\@@b{\randint39}%
+        \xdef\@@c{\randint39}%
+    $-\@@a+\@@b\times(-\@@c)$ & $\the\numexpr-\@@a+\@@b*(-\@@c)$ \\
+    \hline%
+        \xdef\@@a{\randint59}%
+        \xdef\@@b{\randint14}%
+        \xdef\@@c{\randint25}%
+    $(-\@@a-\@@b)\times\@@c$ & $-\the\numexpr(\@@a+\@@b)*\@@c$ \\
+    \hline%
+        \xdef\@@a{\randint25}%
+        \xdef\@@b{\randint69}%
+        \xdef\@@c{\randint29}%
+        \xdef\@@d{\randint69}%
+        \xdef\@@e{\randint25}%
+    $(\@@a-\@@b)\bigl(\@@c-(\@@d-\@@e)\bigr)$ & $\the\numexpr(\@@a-\@@b)*(\@@c-(\@@d-\@@e))$ \\
+    \hline%
+        \xdef\@@a{\expanded{\the\numexpr2*\randint14}}%
+        \xdef\@@b{\expanded{\the\numexpr1+2*\randint14}}%
+        \xdef\@@c{\randint19}%
+    $\@@a\times(-\@@b)\div(-2)+\@@c$ & $\the\numexpr(\@@a/2)*\@@b+\@@c$ \\
+    \hline%
+        \xdef\@@a{2\randint19}%
+        \xdef\@@b{\randint19}%
+    $(-\@@a)+(+\@@b)$ & $\the\numexpr-\@@a+\@@b$ \\
+    \hline%
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{1\randint19}%
+    $-\@@a+\@@b$ & $\the\numexpr\@@b-\@@a$ \\
+    \hline%
+        \xdef\@@a{\randint25}%
+        \xdef\@@b{\randint69}%
+        \xdef\@@c{1\randint19}%
+        \xdef\@@d{\randint15}%
+        \xdef\@@e{\randint69}%
+    $\@@a+\@@b+\@@c-\@@d-\@@e$ & $\the\numexpr\@@a+\@@b+\@@c-\@@d-\@@e$ \\
+    \hline%
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\randint19}%
+        \xdef\@@d{\randint19}%
+    $\@@a\mathord,\@@b\@@c\@@d\div0\mathord,1$ & $\@@a\@@b\mathord,\@@c\@@d$ \\
+    \hline%
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint19}%
+    $\@@a\mathord,\@@b\div0\mathord,001$ & $\@@a\,\@@b00$ \\
+    \hline%
+        \xdef\@@a{\randint35\randint19}%
+        \xdef\@@b{1\randint19}%
+    $-\@@a\times\@@b$ & $-\the\numexpr\@@a*\@@b$ \\ 
+    \hline%
+        \xdef\@@a{\randint12\randint19}%
+        \xdef\@@b{\randint34\randint19}%
+    $\@@a-\@@b$ & $\the\numexpr\@@a-\@@b$ \\ 
+    \hline%
+        \xdef\@@a{\choose{13}.\randint19}%
+        \xdef\@@b{\choose{24}.\randint19}%
+    $-\num{\@@a}\times\num{\@@b}$ & $-\num{\fpeval{\@@a*\@@b}}$ \\ 
+    \hline%
+        \xdef\@@a{0.\randint35\randint46}%
+        \xdef\@@b{0.\randint29}%
+    $-\num{\@@a}\times(-\num{\@@b})$ & $\num{\fpeval{\@@a*\@@b}}$ \\ 
+    \hline%
+        \xdef\@@a{\randint36\randint19}%
+        \xdef\@@b{\randint12\randint19}%
+    $-\@@a\times(-\@@b)$ & $\the\numexpr\@@a*\@@b$ \\ 
+    \hline%
+        \xdef\@@a{\randint36.\randint19}%
+        \xdef\@@b{\randint12.\randint19}%
+    $\num{\@@a}-\num{\@@b}$ & $\num{\fpeval{\@@a-\@@b}}$ \\
+    \hline%
+        \xdef\@@a{\randint27}%
+        \xdef\@@b{\randint49}%
+        \xdef\@@c{\randint59}%
+    $-\@@a\times(-\@@b)\times(-\@@c)$ & $-\the\numexpr\@@a*\@@b*\@@c$ \\
+    \hline%
+        \xdef\@@a{\randint29}%
+    $(-\@@a)^2$ & $\the\numexpr\@@a*\@@a$ \\
+    \hline%
+        \xdef\@@a{\randint29}%
+    $-\@@a^2$ & $-\the\numexpr\@@a*\@@a$ \\
+    \hline%
+        \xdef\@@a{\randint25}%
+    $(-\@@a)^3$ & $-\the\numexpr\@@a*\@@a*\@@a$ \\
+    \hline%
+        \xdef\@@a{\randint39}%
+        \xdef\@@b{\expanded{\the\numexpr2*\randint14}}%
+        \xdef\@@c{\choose{39}}%
+        \xdef\@@d{\randint29}%
+    $-\@@a+\@@b\times\@@c\div6+\@@d$ & $\the\numexpr-\@@a+(\@@b*\@@c)/6+\@@d$ \\
+    \hline%
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\expanded{\the\numexpr2*\randint14}}%
+        \xdef\@@d{\randint19}%
+    $\@@a\times\@@b-\@@c\div(-2)+\@@d$ & $\the\numexpr\@@a*\@@b+\@@c/2+\@@d$ \\
+    \hline%
+        \xdef\@@a{\randint19}%
+        \xdef\@@b{\randint19}%
+        \xdef\@@c{\randint19}%
+        \xdef\@@d{\randint19}%
+        \xdef\@@e{\randint19}%
+    $(-\@@a+\@@b)\times(\@@c-\@@d)+\@@e$ & $\the\numexpr(\@@b-\@@a)*(\@@c-\@@d)+\@@e$ \\
+    \hline%
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\randint36\randint19}%
+        \xdef\@@d{\randint29}%
+        \xdef\@@e{\randint29}%
+    $\@@a\times\@@b-\bigl(\@@c+\@@d\times(-\@@e)\bigr)$ & $\the\numexpr\@@a*\@@b-(\@@c-\@@d*\@@e)$ \\
+    \hline
+        \xdef\@@a{\randint49}%
+        \xdef\@@b{\randint47}%
+        \xdef\@@c{\randint36}%
+        \xdef\@@d{\randint12}%
+    $\@@a-\bigl((\@@b-\@@c)-\@@d\bigr)$ & $\the\numexpr\@@a-\@@b+\@@c+\@@d$ \\
+    \hline
+        \xdef\@@a{2\randint19}%
+        \xdef\@@b{\randint23}%
+        \xdef\@@c{\randint49}%
+        \xdef\@@d{\randint59}%
+        \xdef\@@e{\randint23}%
+    $(\@@a\times\@@b-\@@c\times\@@d)\times\@@e$ & $\the\numexpr(\@@a*\@@b-\@@c*\@@d)*\@@e$  \\
+    \hline
+        \xdef\@@a{\randint36}%
+        \xdef\@@b{\randint34}%
+    $(-\@@a)^{\@@b}$ & $\csname fp_eval:n\endcsname{(-\@@a)^(\@@b)}$  \\
+    \hline
+        \xdef\@@a{\randint14\randint59}%
+        \xdef\@@b{\randint59\randint14}%
+    $\@@a-\@@b$ & $\the\numexpr\@@a-\@@b$  \\
+    \hline
+        \xdef\@@a{\randint28}%
+        \xdef\@@b{\randint59}%
+        \xdef\@@c{\randint47}%
+        \xdef\@@d{\randint16}%
+        \xdef\@@e{\randint28}%
+        \xdef\@@f{\randint39}%
+    $-\@@a+\@@b+\@@c-\@@d+\@@e-\@@f$ & $\the\numexpr-\@@a+\@@b+\@@c-\@@d+\@@e-\@@f$  \\
+    \hline
+        \xdef\@@a{\randint25\randint28.\randint36\randint17}%
+        \xdef\@@b{\randint25\randint28.\randint36\randint17}%
+    $\num{\@@a}-\num{\@@b}$ & $\num{\fpeval{\@@a-\@@b}}$  \\
+    \hline
+\end{tabular}}
+\hfill
+{\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|c|S|}
+    \hline \thead{Calculer} & \thead{Réponse} \\
+    \hline
+        \xdef\@@a{\randint59}%
+        \xdef\@@b{\randint14}%
+        \xdef\@@c{\randint24}%
+        \xdef\@@d{\randint59}%
+    $\bigl(\the\numexpr(\@@a-\@@b)*\@@c\relax-(\@@a-\@@b)\times\@@c\bigr)\div\@@d$ &  $0$ \\
+    \hline
+        \xdef\@@a{\randint49}%
+        \xdef\@@b{\randint47\randint19}%
+        \xdef\@@c{1\randint14}%
+        \xdef\@@d{\randint25\choose{159}}%
+        \xdef\@@e{\randint36\choose{37}}%
+        \xdef\@@f{\randint13\choose{02468}}%
+    $\@@a-\bigl(\@@b-\@@c\times(\@@d-\@@e+\@@f)\div2\bigr)$ & $\the\numexpr\@@a-(\@@b-\@@c*(\@@d-\@@e+\@@f)/2)$ \\
+    \hline
+        \xdef\@@a{\randint{123}{456}}%
+        \xdef\@@b{\randint{356}{689}}%
+    $\@@a+\@@b$ & $\the\numexpr\@@a+\@@b$ \\
+    \hline
+        \xdef\@@a{\randint{11}{99}}%
+        \xdef\@@b{\randint{11}{99}}%
+    $\@@a\times\@@b$ & $\the\numexpr\@@a*\@@b$ \\
+    \hline
+        \xdef\@@a{\randint{11}{29}}%
+        \xdef\@@b{\randint{31}{49}}%
+    $\@@a\times\@@b$ & $\the\numexpr\@@a*\@@b$ \\
+    \hline
+        \xdef\@@a{\randint28.\randint19}%
+        \xdef\@@b{\randint39}%
+    $-\num{\@@a}\times\@@b$ & $\num{\fpeval{-\@@a*\@@b}}$ \\
+    \hline
+        \xdef\@@a{\randint{11}{99}}%
+        \xdef\@@b{\randint{11}{99}}%
+    $\@@a\times\@@b$ & $\the\numexpr\@@a*\@@b$ \\
+    \hline
+        \xdef\@@a{10\randint13}%
+        \xdef\@@b{\randint{11}{99}}%
+    $\@@a\times\@@b$ & $\the\numexpr\@@a*\@@b$ \\
+    \hline
+        \xdef\@@a{\randint{11}{99}}%
+        \xdef\@@b{\randint{11}{99}}%
+    $-\@@a\times\@@b$ & $-\the\numexpr\@@a*\@@b$ \\
+    \hline
+        \xdef\@@a{\randint19}%
+        \xdef\@@b{\randint19}%
+        \xdef\@@c{\randint19}%
+    $(-\@@a)\times(-\@@b)\times(-\@@c)$ & $-\the\numexpr\@@a*\@@b*\@@c$ \\
+    \hline
+        \xdef\@@a{\randint{11}{99}}%
+        \xdef\@@b{\randint{11}{99}}%
+    $\@@a-\@@b$ & $\the\numexpr\@@a-\@@b$ \\
+    \hline
+        \xdef\@@a{\randint25}%
+        \xdef\@@b{0.\randint{11}{99}}%
+    $\@@a\times(-\num{\@@b})$ & $-\num{\fpeval{\@@a*\@@b}}$ \\ 
+    \hline
+        \xdef\@@a{10\randint25}%
+        \xdef\@@b{\randint{111}{199}.\randint19}%
+    $\@@a-(-\num{\@@b})$ & $\num{\fpeval{\@@a+\@@b}}$ \\ 
+    \hline
+        \xdef\@@a{\randint35.\randint19}%
+        \xdef\@@b{\randint69.\randint19}%
+    $\num{\@@a}-\num{\@@b}$ & $\num{\fpeval{\@@a-\@@b}}$ \\ 
+    \hline
+        \xdef\@@a{0.00\randint13}%
+        \xdef\@@b{\randint{11}{39}}%
+    $-\num{\@@a}\times\@@b$ & $-\num{\fpeval{\@@a*\@@b}}$ \\
+    \hline
+        \xdef\@@a{\randint49.\randint19}%
+        \xdef\@@b{\randint13.\randint19}%
+    $-\num{\@@a}-\num{\@@b}$ &  $-\num{\fpeval{\@@a+\@@b}}$ \\
+    \hline
+        \xdef\@@a{\randint19}%
+        \xdef\@@b{\randint19}%
+        \xdef\@@c{\randint19}%
+    $-\num{\@@a.\@@c}+\num{\@@b.\@@c}$ & $\num{\fpeval{-(\@@a.\@@c)+(\@@b.\@@c)}}$ \\
+    \hline
+        \xdef\@@a{\randint15.\choose{2468}}%
+        \xdef\@@b{\choose{24}}%
+    $-\num{\@@a}\div\@@b$ &  $-\num{\fpeval{\@@a/\@@b}}$ \\
+    \hline
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint14}%
+        \xdef\@@c{\randint59}%
+    $-\@@a\times(-\@@b+\@@c)$ &  $\the\numexpr-\@@a*(-\@@b+\@@c)$ \\
+    \hline
+        \xdef\@@a{\randint15.\choose{2468}}%
+        \xdef\@@b{\choose{24}}%
+    $-\num{\@@a}\div(-\@@b)$ &  $\num{\fpeval{\@@a/\@@b}}$ \\
+    \hline
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\randint29}%
+        \xdef\@@d{\randint29}%
+    $\@@a\times\@@b-\@@c\times\@@d$ &  $\the\numexpr\@@a*\@@b-\@@c*\@@d$ \\
+    \hline
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\randint29}%
+        \xdef\@@d{\randint29}%
+    $\@@a-\@@b\times\@@c+\@@d$ &  $\the\numexpr\@@a-\@@b*\@@c+\@@d$ \\
+    \hline
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint{10}{15}}%
+        \xdef\@@c{\randint29}%
+        \xdef\@@d{\randint29}%
+        \xdef\@@e{\randint29}%
+    $-\@@a-\@@b-\@@c\times\@@d+\@@e$ &  $\the\numexpr-\@@a-\@@b-\@@c*\@@d+\@@e$ \\
+    \hline
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\randint29}%
+        \xdef\@@d{\randint29}%
+        \xdef\@@e{\randint29}%
+        \xdef\@@f{\randint29}%
+    $-\@@a\times\@@b+\@@c\times\@@d-\@@e\times\@@f$ &  $\the\numexpr-\@@a*\@@b+\@@c*\@@d-\@@e*\@@f$ \\
+    \hline
+        \xdef\@@a{\randint59}%
+        \xdef\@@b{\choose{57}}%
+        \xdef\@@c{\choose{{11}{13}}}%
+    $\@@a\times(\the\numexpr\@@b*\@@c\relax\div\@@c)\div\@@b$ & $\@@a$ \\
+    \hline
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\randint29}%
+        \xdef\@@d{\randint29}%
+    $\@@a\times\@@b-\@@c\times\@@d$ &  $\the\numexpr\@@a*\@@b-\@@c*\@@d$ \\
+    \hline
+        \xdef\@@a{\randint49.\randint19}%
+        \xdef\@@b{\randint13.\randint19}%
+    $-\num{\@@a}\times\num{\@@b}$ &  $-\num{\fpeval{\@@a*\@@b}}$ \\
+    \hline
+        \xdef\@@a{\randint34\randint19}%
+        \xdef\@@b{\randint56\randint19}%
+    $-\@@a-(-\@@b)$ &  $\the\numexpr-\@@a+\@@b$  \\
+    \hline
+        \xdef\@@a{\randint{35}{65}}%
+        \xdef\@@b{\randint25}%
+        \xdef\@@c{0.0\randint12}%
+    $\@@a\times\@@b\times\num{\@@c}$ &  $\num{\fpeval{\@@a*\@@b*\@@c}} $  \\
+    \hline
+        \xdef\@@a{\randint29}%
+        \xdef\@@b{\randint29}%
+        \xdef\@@c{\randint29}%
+        \xdef\@@d{\randint29}%
+        \xdef\@@e{\randint29}%
+    $-\@@a+\@@b\times\@@c-\@@d\times\@@e$ &  $\the\numexpr-\@@a+\@@b*\@@c-\@@d*\@@e$ \\
+    \hline
+\end{tabular}}
+\vspace*{\fill}
+
+
+
+\section{Calcul fractionnaires}
+
+\topskip0pt
+\vspace*{\fill}
+{\renewcommand{\arraystretch}{2.4}
+\begin{tabular}{|c|S|}
+    \hline \thead{\makecell{Donner sous forme de\\fraction irréductible}} & \thead{Réponse} \\
+    \hline
+        \xdef\@@a{\irrfrac{10}{20}{20}{30}}%
+        \xdef\@@b{\randint25}%
+    $\Frac{\@@a}-\@@b$ & $\Frac{\@@a-\@@b}$\\
+    \hline
+        \xdef\@@a{\irrfrac256{12}}%
+        \xdef\@@b{\irrfrac6{15}25}%
+    $\Frac{\@@a}+\Frac{\@@b}$ & $\Frac{\@@a+\@@b}$ \\
+    \hline
+        \xdef\@@a{\irrfrac4{12}39}%
+        \xdef\@@b{\irrfrac495{16}}%
+    $-\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{-\@@a-\@@b}$ \\
+    \hline
+        \xdef\@@a{\irrfrac2538}%
+        \xdef\@@b{\irrfrac5{15}6{20}}%
+        \xdef\@@c{\randint59}%
+    $\displaystyle\frac{\Frac{\@@a}+\Frac{\@@b}}{\@@c}$ & $\Frac{(\@@a+\@@b)/(\@@c)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac285{12}}%
+        \xdef\@@b{\irrfrac285{12}}%
+    $\displaystyle\frac{\,\Frac{\@@a}\,}{\,\Frac{\@@b}\,}$ & $\Frac{(\@@a)/(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\randint{12}{30}}%
+    $\frac{\@@a}{100}\times10$ & $\Frac{\@@a/10}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac3737}%
+        \xdef\@@b{\irrfrac3725}%
+    $\Frac{\@@a}+\Frac{\@@b}$ & $\Frac{(\@@a)+(\@@b)}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac3737}%
+        \xdef\@@b{\irrfrac3725}%
+    $-\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{-(\@@a)-(\@@b)}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac3737}%
+        \xdef\@@b{\irrfrac3725}%
+    $-\Frac{\@@a}\times\left(-\Frac{\@@b}\right)$ & $\Frac{(\@@a)*(\@@b)}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac3737}%
+        \xdef\@@b{\irrfrac{10}{20}37}%
+    $\Frac{\@@a}+\Frac{\@@b}-\Frac{\@@a}$ & $\Frac{\@@b}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac11{15}{30}}%
+    $1-\Frac{\@@a}$ & $\Frac{1-(\@@a)}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac39{10}{15}}%
+        \xdef\@@b{\randint7{12}}%
+    $\Frac{\@@a}-\@@b$ & $\Frac{\@@a-\@@b}$\\
+    \hline
+        \xdef\@@a{\irrfrac3737}%
+        \xdef\@@b{\irrfrac3725}%
+    $\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{(\@@a)-(\@@b)}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac25{12}{15}}%
+        \xdef\@@b{\irrfrac35{16}{20}}%
+    $\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{(\@@a)-(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac1125}%
+        \xdef\@@b{\irrfrac1169}%
+        \xdef\@@c{\irrfrac{20}{32}35}%
+    $\frac{\,\Frac{\@@a}\,}{\,\Frac{\@@b}\,}\times\Frac{\@@c}$ & $\Frac{(\@@a)*(\@@c)/(\@@b)}$ \\
+    \hline
+\end{tabular}}
+\hfill
+{\renewcommand{\arraystretch}{2.4}
+\begin{tabular}{|c|S|}
+    \hline \thead{\makecell{Donner sous forme de\\fraction irréductible}} & \thead{Réponse} \\
+    \hline
+        \xdef\@@a{\choose{37}}%
+        \xdef\@@b{\cchoose{5,9,11}}%
+        \xdef\@@c{\@@b/\@@a}%
+        \xdef\@@d{(2*\@@a)/(\@@b*\@@b)}%
+    $\Frac{\@@c}\times\Frac{\@@d}$ & $\Frac{(\@@c)*(\@@d)}$ \\
+    \hline
+        \xdef\@@a{\randint58}%
+        \xdef\@@b{\choose{57}}%
+        \xdef\@@c{\randint68}%
+        \xdef\@@d{(2^\@@a)/(3*\@@b)}%
+        \xdef\@@e{(\@@c)^2/35}%
+    $\frac{\,\Frac{\@@d}\,}{\,\Frac{\@@e}\,}$ & $\Frac{(\@@d)/(\@@e)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac{18}{25}{12}{18}}%
+        \xdef\@@b{\irrfrac{3}{7}{8}{15}}%
+        \xdef\@@c{\irrfrac{5}{9}{8}{10}}%
+        \xdef\@@d{\irrfrac{15}{18}{18}{25}}%
+    $\frac{\Frac{\@@a}+\Frac{\@@b}}{\Frac{\@@c}-\Frac{\@@d}}$ & $\Frac{(\@@a+\@@b)/(\@@c-\@@d)}$ \\
+    \hline
+        \xdef\@@a{(2^\randint46)*\cchoose{3*5,3*7,5*7}}%
+        \xdef\@@b{(3^\randint23)*\cchoose{3*5,3*7,5*7}}%
+        \xdef\@@c{\cchoose{2*2*3*5*7,2*3*3*5*7,2*3*5*5*7,2*3*5*7*7}}%
+        \xdef\@@d{(2^\randint23)*\choose{57}*11}%
+    $\frac{\Frac{\@@a}}{\Frac{\@@b}}\div\frac{\Frac{\@@c}}{\Frac{\@@d}}$ & $\Frac{((\@@a)*(\@@c))/((\@@b)*(\@@d))}$ \\
+    \hline
+        \xdef\@@a{\randint9{11}}%
+        \xdef\@@b{\irrfrac{3}{9}{\@@a}{\@@a}}%
+        \xdef\@@c{\irrfrac{3}{9}{\@@a+1}{\@@a+1}}%
+        \xdef\@@d{\cchoose{99,101}}%
+    $\frac{\Frac{\@@b}-\Frac{\@@c}}{\Frac{1/\@@d}}$ & $\Frac{(\@@b-\@@c)/(1/\@@d)}$ \\
+    \hline
+        \xdef\@@a{\choose{3579}}%
+        \xdef\@@b{\choose{2468}}%
+    $\Frac{\@@a*\@@b}\div\Frac{\@@a/\@@b}$ & $\Frac{\@@a*\@@b/(\@@a/\@@b)}$ \\ 
+    \hline
+        \xdef\@@a{\choose{2468}}%
+        \xdef\@@b{\choose{3579}}%
+    $-\@@a\times\frac{1}{\@@b}$ & $-\Frac{\@@a/\@@b}$ \\ 
+    \hline
+        \xdef\@@p{\choose{35}}%
+        \xdef\@@q{\choose{27}}%
+    $\frac{\@@p}{\Frac{\@@p^3}}\times\frac{\Frac{\@@p^2}}{\Frac{\@@q*\@@p^2}}$ & $\Frac{1/(\@@q*\@@p^2)}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac6{11}25}%
+        \xdef\@@b{\irrfrac1169}%
+    $\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{\@@a-\@@b}$ \\ 
+    \hline
+        \choose{{\xdef\@@p{2}\xdef\@@q{3}}{\xdef\@@p{3}\xdef\@@q{2}}}%
+        \xdef\@@Q{\cchoose{11,13}}%
+    $\frac{\Frac{\@@p*\@@q^2}}{\Frac{\@@Q*\@@p}}\times\frac{\Frac{\@@p*\@@q}}{\@@Q}$ & $\Frac{(\@@p*\@@q^2)/(\@@Q^2)}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac{40}{60}{10}{30}}%
+        \xdef\@@b{\irrfrac2538}%
+    $\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{\@@a-\@@b}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac1139}%
+        \xdef\@@b{\randint{25}{49}}%
+        \xdef\@@c{\irrfrac2539}%
+    $\Frac{\@@a}\times\@@b-\Frac{\@@c}$ & $\Frac{(\@@a)*\@@b-\@@c}$  \\
+    \hline
+        \xdef\@@a{\cchoose{2,3}}%
+        \xdef\@@b{\cchoose{5,7}}%
+        \xdef\@@c{\randint59}%
+        \xdef\@@d{\randint24}%
+    $\frac{\@@a}{\@@b}\times\frac{\the\numexpr\@@c*\@@b}{\the\numexpr\@@d*\@@c*\@@a}$ & $\frac{1}{\@@d}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac1139}%
+        \xdef\@@b{\irrfrac{8}{12}35}%
+    $\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{\@@a-\@@b} $ \\ 
+    \hline
+        \xdef\@@a{\randint36}%
+        \xdef\@@b{\the\numexpr\@@a*\randint5{11}}%
+        \xdef\@@c{\randint25}%
+    $\frac{\@@b}{\frac{\@@a}{\@@c}}$ & $\Frac{(\@@b)/(\@@a/\@@c)}$ \\
+    \hline
+\end{tabular}}
+\vspace*{\fill}
+
+\clearpage
+\topskip0pt
+\vspace*{\fill}
+{\renewcommand{\arraystretch}{2.4}
+\begin{tabular}{|c|S|}
+    \hline \thead{\makecell{Donner sous forme de\\fraction irréductible}} & \thead{Réponse} \\
+    \hline
+        \xdef\@@a{\irrfrac285{12}}%
+        \xdef\@@b{\irrfrac5825}%
+    $\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{\@@a-\@@b}$ \\
+    \hline
+        \xdef\@@pa{\cchoose{2,3,5}}%
+        \xdef\@@pb{\cchoose{2,3,7}}%
+        \xdef\@@pc{\cchoose{2,5,7}}%
+        \xdef\@@pd{\cchoose{3,5}}%
+        \xdef\@@a{\the\numexpr\@@pa*\@@pb}%
+        \xdef\@@b{\the\numexpr\@@pc*\@@pd}%
+        \xdef\@@c{\the\numexpr\@@pb*\@@pb}%
+        \xdef\@@d{\the\numexpr\@@pd*\@@pd}%
+        \xdef\@@e{\the\numexpr\@@pa*\@@pc}%
+        \xdef\@@f{\the\numexpr\@@pb*\@@pd}%
+    $\frac{\@@a}{\@@b}\times\frac{\@@c}{\@@d}\times\frac{\@@e}{\@@f}$ & $\Frac{(\@@a/\@@b)*(\@@c/\@@d)*(\@@e/\@@f)}$ \\
+    \hline
+        \xdef\@@a{\randint25}%
+        \xdef\@@b{\irrfrac2659}%
+    $\frac{~~\@@a~~}{\Frac{\@@b}}$ & $ \Frac{\@@a/(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\randint25}%
+        \xdef\@@b{\irrfrac2659}%
+    $\frac{\Frac{\@@b}}{~~\@@a~~}$ & $ \Frac{(\@@b)/\@@a}$ \\
+    \hline
+        \xdef\@@a{\irrfrac2659}%
+        \xdef\@@b{\irrfrac2659}%
+    $\frac{~\Frac{\@@a}~}{~\Frac{\@@b}~}$ & $ \Frac{(\@@a)/(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\randint25}%
+        \xdef\@@b{\randint24}%
+        \xdef\@@c{\the\numexpr\@@b*\@@a}%
+        \xdef\@@d{\cchoose{11,13,17}}%
+    $\frac{\@@d}{\@@b}+\frac{7}{\@@c}$ & $ \Frac{(\@@d/\@@b)+(7/\@@c)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac2929}%
+        \xdef\@@b{\irrfrac2929}%
+    $\Frac{\@@a}-\Frac{\@@b}$ & $\Frac{\@@a-\@@b}$ \\
+    \hline
+        \xdef\@@a{\irrfrac9{12}46}%
+        \xdef\@@b{\irrfrac1456}%
+        \xdef\@@c{\irrfrac3745}%
+    $\Frac{\@@a}-\Frac{\@@b}+\Frac{\@@c}$ & $\Frac{\@@a-\@@b+\@@c}$ \\
+    \hline
+        \xdef\@@a{\irrfrac2929}%
+        \xdef\@@b{\irrfrac2929}%
+    $\Frac{\@@a}\times\Frac{\@@b}$ & $\Frac{(\@@a)*(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac2929}%
+        \xdef\@@b{\irrfrac2929}%
+    $-\Frac{\@@a}\times\left(-\Frac{\@@b}\right)$ & $\Frac{(\@@a)*(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\randint28}%
+        \xdef\@@b{\randint28}%
+        \xdef\@@c{\randint28}%
+    $\frac{\@@a-\@@b}{\@@c}$ & $\Frac{(\@@a-\@@b)/\@@c}$ \\
+    \hline
+        \xdef\@@a{\irrfrac2929}%
+        \xdef\@@b{\irrfrac2929}%
+    $\Frac{\@@a}\times\Frac{\@@b}$ & $\Frac{(\@@a)*(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\randint28}%
+        \xdef\@@b{\irrfrac2929}%
+    $\@@a-\Frac{\@@b}$ & $\Frac{\@@a-(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\randint26}%
+        \xdef\@@b{\irrfrac{10}{15}26}%
+        \xdef\@@c{\irrfrac{10}{15}26}%
+    $\@@a-\Frac{\@@b}\times\Frac{\@@c}$ & $\Frac{\@@a-(\@@b)*(\@@c)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac2929}%
+        \xdef\@@b{\irrfrac2929}%
+        \xdef\@@c{\irrfrac2929}%
+    $\Frac{\@@a}-\Frac{\@@b}\times\Frac{\@@c}$ & $\Frac{(\@@a)-(\@@b)*(\@@c)}$ \\
+    \hline
+\end{tabular}}
+\hfill
+{\renewcommand{\arraystretch}{2.4}
+\begin{tabular}{|c|S|}
+    \hline \thead{\makecell{Donner sous forme de\\fraction irréductible}} & \thead{Réponse} \\
+    \hline
+        \xdef\@@a{\irrfrac367{11}}%
+    $\left(\Frac{\@@a}\right)^2$ & $\Frac{(\@@a)*(\@@a)}$  \\
+    \hline
+        \xdef\@@a{\randint36}%
+    $\frac{\@@a-1}{\@@a+1}$ & $\Frac{(\@@a-1)/(\@@a+1)}$  \\
+    \hline
+        \xdef\@@a{\randint58}%
+    $\Frac{\@@a/(\@@a+1)}-1$ & $\Frac{\@@a/(\@@a+1)-1}$  \\
+    \hline
+        \xdef\@@a{\irrfrac1135}%
+        \xdef\@@b{\irrfrac1168}%
+        \xdef\@@c{\irrfrac1357}%
+    $\frac{\Frac{\@@a}-\Frac{\@@b}}{\Frac{\@@c}}$ & $\Frac{(\@@a-\@@b)/(\@@c)}$  \\
+    \hline
+        \xdef\@@a{\randint28}%
+    $\frac{\@@a-\@@a}{\@@a}$ & $0$  \\
+    \hline
+        \xdef\@@a{\irrfrac9{12}46}%
+        \xdef\@@b{\irrfrac1456}%
+        \xdef\@@c{\irrfrac3734}%
+    $\Frac{\@@a}-\Frac{\@@b}\times\Frac{\@@c}$ & $\Frac{\@@a-(\@@b)*(\@@c)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac9{12}46}%
+        \xdef\@@b{\irrfrac1456}%
+        \xdef\@@c{\irrfrac3734}%
+    $\Frac{\@@a}+\left(\Frac{\@@b}-\Frac{\@@c}\right)$ & $\Frac{\@@a+\@@b-\@@c}$ \\
+    \hline
+        \xdef\@@a{\irrfrac285{15}}%
+    $\Frac{\@@a}-\frac0{\randint25}\times\Frac{\irrfrac{123}{456}{789}{1011}}$ & $\Frac{\@@a}$ \\
+    \hline
+        \xdef\@@pa{\cchoose{1,2}}%
+        \xdef\@@pb{\cchoose{3,5}}%
+        \xdef\@@pc{\cchoose{7,11}}%
+        \xdef\@@a{\cchoose{4,6,9}}%
+        \xdef\@@b{\the\numexpr\@@pa*\@@pb}%
+        \xdef\@@c{\the\numexpr\@@pc*\@@pc}%
+        \xdef\@@d{\the\numexpr\@@pa*\@@pc}%
+        \xdef\@@e{\the\numexpr\@@pb*\@@pc}%
+    $\frac1{\@@b}\times\frac{\@@a}{\@@c}-\frac{\@@a}{\@@d}\times\frac1{\@@e}$ & $0$ \\
+    \hline
+        \xdef\@@a{\irrfrac4567}%
+        \xdef\@@b{\irrfrac4689}%
+    $\frac{~\Frac{\@@a}~}{~\Frac{\@@b}~}$ & $\Frac{(\@@a)/(\@@b)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac4567}%
+        \xdef\@@b{\irrfrac4689}%
+        \xdef\@@c{\irrfrac1135}%
+    $\frac{-\Frac{\@@a}}{\Frac{\@@b}}+\Frac{\@@c}$ & $\Frac{(-\@@a)/(\@@b)+\@@c}$ \\
+    \hline
+        \xdef\@@a{\irrfrac9{12}46}%
+        \xdef\@@b{\irrfrac1456}%
+        \xdef\@@c{\irrfrac3734}%
+    $\Frac{\@@a}-\Frac{\@@b}\div\Frac{\@@c}$ & $\Frac{\@@a-(\@@b)-(\@@c)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac9{12}46}%
+        \xdef\@@b{\irrfrac1456}%
+        \xdef\@@c{\irrfrac3734}%
+    $\Frac{\@@a}-\left(\Frac{\@@b}-\Frac{\@@c}\right)$ & $\Frac{\@@a-(\@@b-\@@c)}$ \\
+    \hline
+        \xdef\@@a{\irrfrac9{12}36}%
+        \xdef\@@b{\randint35}%
+    $\Frac{-\@@a}\div\@@b$ & $\Frac{-(\@@a)/\@@b}$ \\
+    \hline
+        \xdef\@@pa{\cchoose{2,3,5}}%
+        \xdef\@@pb{\cchoose{2,3,7}}%
+        \xdef\@@pc{\cchoose{2,5,7}}%
+        \xdef\@@pd{\cchoose{3,5}}%
+        \xdef\@@a{\the\numexpr\@@pa*\@@pb}%
+        \xdef\@@b{\the\numexpr\@@pc*\@@pd}%
+        \xdef\@@c{\the\numexpr\@@pb*\@@pb}%
+        \xdef\@@d{\the\numexpr\@@pd*\@@pd}%
+        \xdef\@@e{\the\numexpr\@@pa*\@@pc}%
+        \xdef\@@f{\the\numexpr\@@pb*\@@pd}%
+    $\frac{\@@a}{\@@b}\times\frac{\@@c}{\@@d}\times\frac{\@@e}{\@@f}$ & $\Frac{(\@@a/\@@b)*(\@@c/\@@d)*(\@@e/\@@f)}$ \\
+    \hline
+\end{tabular}}
+\vspace*{\fill}
+
+
+
+
+\addblankpage
+
+\section{Calcul numérique}
+
+\topskip0pt
+\vspace*{\fill}
+\hspace*{-.8cm}
+{\renewcommand{\arraystretch}{2.75}
+\begin{tabular}{|c|S|}
+    \hline \thead{Calculer} & \thead{Réponse} \\
+    \hline
+        \xdef\@@a{\randint46}%
+        \xdef\@@b{\randint34}%
+        \xdef\@@c{\randint23}%
+    ${(\@@a^\@@b)}^\@@c$ & $\@@a^{\the\numexpr\@@b*\@@c}=\fpeval{(\@@a)^(\@@b*\@@c)}$ \\
+    \hline
+        \xdef\@@a{\randint79}%
+        \xdef\@@b{\randint56}%
+        \xdef\@@c{\the\numexpr\@@b-\randint13}%
+    $\@@a^\@@b\times\@@a^{-\@@c}$ & $\@@a^{\the\numexpr\@@b-\@@c}=\fpeval{(\@@a)^(\@@b-\@@c)}$ \\
+    \hline
+        \xdef\@@pa{\cchoose{2,3}}%
+        \xdef\@@pb{\cchoose{2,4}}%
+        \xdef\@@a{\the\numexpr\@@pa*\@@pb}%
+        \xdef\@@b{\randint23}%
+        \xdef\@@c{\randint23}%
+    $\@@a^\@@b\times\@@pa^\@@c\times\@@pb^\@@c$ & $\@@a^{\the\numexpr\@@b+\@@c}=\fpeval{(\@@a)^(\@@b+\@@c)}$ \\
+    \hline
+        \xdef\@@pa{\cchoose{2,3}}%
+        \xdef\@@pb{\cchoose{2,4}}%
+        \xdef\@@a{\the\numexpr\@@pa*\@@pb}%
+        \xdef\@@b{\randint46}%
+        \xdef\@@c{\randint23}%
+    $\frac{\@@a^\@@b\times\@@pa^{-\@@c}}{\@@pb^\@@c}$ & $\@@a^{\the\numexpr\@@b-\@@c}=\fpeval{(\@@a)^(\@@b-\@@c)}$ \\
+    \hline
+        \xdef\@@a{\randint57}%
+        \xdef\@@b{\randint24}%
+        \xdef\@@c{\randint23}%
+    $\frac{\sqrt{\the\numexpr\@@c*\@@a*\@@a}}{\sqrt{\the\numexpr\@@c*\@@b*\@@b}}$ & $\Frac{\@@a/\@@b}$ \\
+    \hline
+        \xdef\@@a{\randint{15}{25}}%
+        \xdef\@@b{\randint48}%
+        \xdef\@@c{\randint48}%
+        \xdef\@@d{\randint24}%
+    $\@@a+\bigl((\@@b+\@@c)\times\@@d\bigr)$ & $\fpeval{\@@a+((\@@b+\@@c)*\@@d)}$ \\ 
+    \hline
+        \xdef\@@a{\randint{15}{25}}%
+        \xdef\@@b{\randint9{12}}%
+        \xdef\@@b{\randint5{15}}%
+    $\@@a-(-\@@b+\@@c)$ & $\fpeval{\@@a-(-\@@b+\@@c)}$ \\ 
+    \hline
+        \xdef\@@a{\randint48}%
+        \xdef\@@b{\randint47}%
+        \xdef\@@c{\randint59}%
+    $\@@a\times\@@b+\@@c$ & $\fpeval{\@@a*\@@b+\@@c}$ \\
+    \hline
+        \xdef\@@a{\randint9{12}}%
+        \xdef\@@b{\randint48}%
+        \xdef\@@c{\randint48}%
+        \xdef\@@d{\randint24}%
+    $(\@@a-\@@b)\div(\@@c+\@@d)$ & $\Frac{(\@@a-\@@b)/(\@@c+\@@d)}$ \\ 
+    \hline
+        \foreach \i in {a,b,c,d,e,f,g} {%
+            \expandafter\xdef\csname @@\i\endcsname{\randint2{10}}%
+        }%
+    $\@@a+\Bigl(\!\bigl((\@@b+\@@c\times\@@d)-\@@e\bigr)\times\@@f\Bigr)+\@@g$ & $\fpeval{\@@a+(((\@@b+\@@c*\@@d)-\@@e)*\@@f)+\@@g}$ \\
+    \hline
+        \xdef\@@a{\randint38}%
+        \xdef\@@a{\randint38}%
+        \xdef\@@a{\randint{30}{50}}%
+    $\@@a\times\@@b^2-\@@c$ & $\fpeval{\@@a*\@@b*\@@b-\@@c}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac3524}%
+        \xdef\@@b{\randint{15}{25}}%
+        \xdef\@@c{\randint12}%
+        \xdef\@@d{\randint34}%
+    $\Frac{\@@a}\times\@@b-(\@@c+\@@d)^2$ & $\Frac{(\@@a)*\@@b-(\@@c+\@@d)*(\@@c+\@@d)}$ \\ 
+    \hline
+        \xdef\@@a{\randint36}%
+        \xdef\@@b{\randint{15}{25}}%
+        \xdef\@@c{\randint12}%
+    $(-\@@a)^2+\@@b\times\@@c$ & $\fpeval{\@@a*\@@a+\@@b*\@@c}$ \\ 
+    \hline
+        \xdef\@@a{\randint36}%
+        \xdef\@@b{\randint49}%
+        \xdef\@@c{\randint35}%
+        \xdef\@@d{\randint69}%
+    $\frac{\@@a\@@b\times10^{-\@@c}}{\@@a\mathord,\@@b\times10^{-\@@d}}$ & $10^{\the\numexpr\@@d-\@@c+1}=\fpeval{10^(\@@d-\@@c+1)}$ \\ 
+    \hline
+        \xdef\@@a{\randint13}%
+        \xdef\@@b{\randint{60}{70}}%
+        \xdef\@@c{\randint35}%
+        \xdef\@@d{\randint35}%
+    $\@@a-\frac{\@@b}{\@@c+\@@d^2}$ & $\Frac{\@@a-(\@@b)/(\@@c+\@@d*\@@d)}$ \\ 
+    \hline
+\end{tabular}}
+\hfill
+{\renewcommand{\arraystretch}{2.75}
+\begin{tabular}{|c|S|}
+    \hline \thead{Calculer} & \thead{Réponse} \\
+    \hline
+        \cchoose{%
+            {\xdef\@@p{5}\xdef\@@q{3}\xdef\@@r{5}\xdef\@@s{2}},%
+            {\xdef\@@p{5}\xdef\@@q{2}\xdef\@@r{7}\xdef\@@s{3}},%
+            {\xdef\@@p{3}\xdef\@@q{5}\xdef\@@r{5}\xdef\@@s{2}},%
+            {\xdef\@@p{2}\xdef\@@q{5}\xdef\@@r{7}\xdef\@@s{5}},%
+            {\xdef\@@p{3}\xdef\@@q{5}\xdef\@@r{7}\xdef\@@s{2}},%
+            {\xdef\@@p{3}\xdef\@@q{5}\xdef\@@r{2}\xdef\@@s{5}},%
+            {\xdef\@@p{5}\xdef\@@q{2}\xdef\@@r{3}\xdef\@@s{5}},%
+            {\xdef\@@p{5}\xdef\@@q{3}\xdef\@@r{7}\xdef\@@s{3}}%
+        }%
+    $\sqrt{\frac{\the\numexpr\@@p*\@@p*\@@p}{\the\numexpr\@@q*\@@q*\@@q}}\times\sqrt{\the\numexpr\@@r*\@@s*\@@s}$ & $\Frac{(\@@p*\@@s)/\@@q}\sqrt{\Frac{\@@p*\@@r/\@@q}}$ \\
+    \hline
+        \xdef\@@a{\randint35}%
+        \xdef\@@b{\randint68}%
+        \xdef\@@c{\randint56}%
+    $\frac{\sqrt{\the\numexpr\@@c*\@@a*\@@a}}{\sqrt{\the\numexpr\@@c*\@@b*\@@b}}$ & $\Frac{\@@a/\@@b}$ \\
+    \hline
+        \xdef\@@a{\randint24}%
+        \xdef\@@b{\randint57}%
+        \xdef\@@c{\randint45}%
+    $\frac{{\bigl(\@@a\sqrt{\@@b}\bigr)}^2}{\sqrt{\fpeval{\@@c^4}}}$ & $\Frac{(\@@a*\@@a*\@@b)/(\@@c*\@@c)}$ \\
+    \hline
+        \xdef\@@b{5}%
+        \xdef\@@c{\the\numexpr3*\@@b*\@@b}%
+        \xdef\@@d{\the\numexpr4*\@@c}%
+        \xdef\@@ea{\randint35}%
+        \xdef\@@eb{\randint57}%
+        \xdef\@@ec{\the\numexpr\@@eb-\cchoose{2,4}}%
+    $\frac{{\bigl(2^\@@ea\sqrt{\@@c}\bigr)}^\@@eb}{{\bigl(\sqrt{\@@d}\bigr)}^\@@ec}$ & $2^{\the\numexpr\@@ea*\@@eb-\@@ec}\times3^{\Frac{(\@@eb-\@@ec)/2}}\times\@@b^{\the\numexpr\@@eb-\@@ec}$ \\
+    \hline
+        \xdef\@@a{\the\numexpr10*(2*\randint{8}{11}+1)}%
+    $\sqrt{\the\numexpr\@@a*\@@a}$ & $\@@a$ \\
+    \hline
+        \GENINT{a,b,c,d,e}%
+    $\@@a\times\@@b-(\@@c\times\@@d+\@@e)$ & $\fpeval{\@@a*\@@b-(\@@c*\@@d+\@@e)}$ \\ 
+    \hline
+        \GENINT{a,b,c,d,e}%
+    $\@@a-(\@@b+\@@c+\@@d-\@@e)$ & $\fpeval{\@@a-(\@@b+\@@c+\@@d-\@@e)}$ \\ 
+    \hline
+        \GENINT{a,c,d,e}%
+        \xdef\@@b{\randint{12}{20}}%
+    $(\@@a\times\@@b)+(\@@c\times\@@d-\@@e)$ & $\fpeval{\@@a*\@@b+\@@c*\@@d-\@@e}$ \\ 
+    \hline
+        \GENINT{a,b,c}%
+    $\sqrt{\the\numexpr\@@a*\@@a}+\sqrt{\the\numexpr\@@b*\@@b}\times \sqrt{\the\numexpr\@@c*\@@c}$ & $\fpeval{\@@a+\@@b*\@@c}$ \\ 
+    \hline
+        \xdef\@@a{\cchoose{2,4,5,10}}%
+        \xdef\@@b{\fpeval{1/\@@a}}%
+    $\@@a^2+(\num{\@@b})^2$ & $\num{\fpeval{\@@a*\@@a+\@@b*\@@b}}$ \\ 
+    \hline
+        \xdef\@@a{\irrfrac4724}%
+        \xdef\@@b{\randint24}%
+        \xdef\@@c{\randint35}%
+        \xdef\@@d{\the\numexpr\@@c+1}%
+        \xdef\@@e{\the\numexpr2*\randint49}%
+    $\Frac{\@@a}-\@@b\times\frac{\@@d-\sqrt{(-\@@c)^2}}{\@@e}$ & $\Frac{\@@a-\@@b/\@@e}$ \\ 
+    \hline
+        \GENINT{a,b,c,d,e,f}%
+    $\frac{\@@a+\@@b\times\@@c^2}{\@@d}-\@@e\times\@@f^2$ & $\Frac{(\@@a+\@@b*\@@c*\@@c)/(\@@d)-\@@e*\@@f*\@@f}$ \\
+    \hline
+        \GENINT{a,b}
+    $(\@@a-\@@b)^2-(\@@a+\@@b)^3$ & $\fpeval{(\@@a-\@@b)^2-(\@@a+\@@b)^2}$ \\ 
+    \hline
+        \GENINT{a,b,c,d}%
+    $\sqrt{\the\numexpr\@@a*\@@a}\times\sqrt{\the\numexpr\@@d*\@@d}-\sqrt{\the\numexpr\@@b*\@@b}\times \sqrt{\the\numexpr\@@c*\@@c}$ & $\fpeval{\@@a*\@@d-\@@b*\@@c}$ \\ 
+    \hline
+        \GENINT{a,c,d,e}%
+        \xdef\@@b{\randint24}%
+    $\@@a\times\@@b^3-\@@c\times\@@d^2+\@@e$ & $\fpeval{\@@a*\@@b^3-\@@c*\@@d*\@@d+\@@e}$ \\ 
+    \hline
+\end{tabular}}
+\vspace*{\fill}
+
+\clearpage
+\topskip0pt
+\vspace*{\fill}
+\hspace*{-.8cm}
+{\renewcommand{\arraystretch}{2.75}
+\begin{tabular}{|c|S|}
+    \hline \thead{Calculer} & \thead{Réponse} \\
+    \hline
+        \GENINT{a,b}%
+    $(\@@a+\@@b)^2$ &  $\fpeval{(\@@a+\@@b)^2}$  \\
+    \hline
+        \xdef\@@a{\cchoose{5,7,11}}%
+    Simplifier $\sqrt{\the\numexpr\@@a*\@@a*\@@a}$ &  $\@@a\sqrt{\@@a}$  \\
+    \hline
+        \xdef\@@a{\randint{10}{16}}%
+        \xdef\@@b{\randint24}%
+        \xdef\@@c{\the\numexpr\@@a*\@@b}%
+    $\sqrt{\@@b}\times\sqrt{\@@a}\times\sqrt{\@@c}$ &  $\@@c$  \\
+    \hline
+        \GENINT{a}%
+    $\sqrt{(-\@@a)^2}$ &  $\@@a$  \\
+    \hline
+        \GENINT{a}%
+    $-\sqrt{\@@a^2}$ &  $-\@@a$  \\
+    \hline
+        \xdef\@@a{\randint24}%
+        \GENINT{b,ea,eb}%
+        \xdef\@@c{\the\numexpr\@@a*\@@b}%
+    Simplifier $\frac{(-\@@a)^\@@ea\times\@@b^\@@ea}{(-\@@c)^{-\@@eb}}$ &  $\fpeval{(-1)^(\@@ea+\@@eb)*\@@c}^{\the\numexpr\@@ea+\@@eb}$  \\
+    \hline
+        \GENINT{a,ea,eb,ec}%
+    Simplifier $\frac{(-\@@a)^{-\@@ea}}{(-\@@a)^\@@eb\times (-\@@a)^{-\@@ec}}$ &  $\fpeval{(-1)^(-\@@ea-\@@eb+\@@ec)*\@@a}^{\the\numexpr-\@@ea-\@@eb+\@@ec}$  \\
+    \hline
+        \cchoose{%
+            {\xdef\@@a{5}\xdef\@@b{12}\xdef\@@c{13}},%
+            {\xdef\@@a{20}\xdef\@@b{21}\xdef\@@c{29}},%
+            {\xdef\@@a{8}\xdef\@@b{15}\xdef\@@c{17}}%
+        }%
+    $\sqrt {\@@a^2+\@@b^2}$ &  $\@@c$  \\
+    \hline
+        \GENINT{a}%
+    $\randint39^0-\@@a^1$ &  $-\@@a$  \\
+    \hline
+        \GENINT{a,b,c,d}%
+    $\sqrt{\the\numexpr\@@a*\@@a} + (\@@b-\@@c)^2 \times (-\@@d)$ &  $\fpeval{\@@a-\@@d*(\@@b-\@@c)^2}$  \\
+    \hline
+        \GENINT{a,b}%
+    $\left(\Frac{\irrfrac1969}-\Frac{\irrfrac6925}\right)\times \frac{\the\numexpr\@@a*\@@b\relax-\@@a\times\@@b}{\randint29} $ &  $0$ \\
+    \hline
+        \xdef\@@a{\the\numexpr10*(2*\randint{8}{11})}%
+    $\sqrt{\the\numexpr\@@a*\@@a}$ & $\@@a$ \\
+    \hline
+        \GENINT{a,b,c,d}%
+    $(\@@a-\@@b)^2-(\@@c-\@@d)(\@@c+\@@d)$ &  $\fpeval{(\@@a+\@@b)^2-(\@@c-\@@d)*(\@@c\@@d)}$  \\
+    \hline
+        \GENINT{a,b,c,d,e}%
+    $\@@a+\@@b\times\@@c-\@@d^2+\sqrt{\the\numexpr\@@e*\@@e}$ &  $\fpeval{\@@a+\@@b*\@@c-\@@d*\@@d+\@@e}$  \\
+    \hline
+        \xdef\@@a{\irrfrac3836}%
+        \GENINT{b}%
+        \xdef\@@c{\irrfrac3836}%
+    $\Frac{\@@a}\times\@@b+\left(\Frac{\@@c}\right)^2$ &  $\Frac{(\@@a)*\@@b+(\@@c)*(\@@c)}$  \\
+    \hline
+        \xdef\@@a{\randint24}%
+        \xdef\@@ea{\randint46}%
+        \xdef\@@eb{\the\numexpr\@@ea-\randint12}%
+    $\@@a^\@@ea-\@@a^\@@eb$ &  $\fpeval{\@@a^\@@ea-\@@a^\@@eb}$  \\
+    \hline
+\end{tabular}}
+\hfill
+{\renewcommand{\arraystretch}{2.75}
+\begin{tabular}{|c|S|}
+    \hline \thead{Calculer} & \thead{Réponse} \\
+    \hline
+        \xdef\@@a{\cchoose{2,4}}%
+        \xdef\@@b{\cchoose{1,3}}%
+        \xdef\@@c{\the\numexpr2*\@@a*\@@a}%
+        \xdef\@@d{\the\numexpr2*\@@b*\@@b}%
+        \xdef\@@e{\the\numexpr4*\@@c}%
+    $\frac{\sqrt{\@@c}+ \sqrt{\@@d}}{\sqrt{\@@e}}$ &  $\Frac{(\@@a+\@@b)/(2*\@@a)}$  \\
+    \hline
+        \xdef\@@a{\cchoose{2,4}}%
+        \xdef\@@b{\cchoose{3,5}}%
+        \xdef\@@c{\the\numexpr2*\@@a*\@@a}%
+        \xdef\@@d{\the\numexpr2*\@@b*\@@b}%
+        \xdef\@@e{\the\numexpr4*\@@c}%
+    $\frac{\sqrt{\@@e}}{\sqrt{\@@c}-\sqrt{\@@d}}$ &  $\Frac{(2*\@@a)/(\@@a-\@@b)}$  \\
+    \hline
+        \xdef\@@a{\randint24}%
+        \xdef\@@b{\randint69}%
+        \xdef\@@ea{\randint24}%
+        \xdef\@@eb{\randint57}%
+        {\renewcommand{\arraystretch}{1}\begin{tabular}{c}Déterminer l'écriture\\scientifique de\\$\@@a\times10^{-\@@ea}\times \@@b\times10^\@@eb$\end{tabular}}
+        & $\num{\fpeval{\@@a*\@@b/10}}\times 10^{\the\numexpr\@@eb-\@@ea+1}$ \\
+    \hline
+        \foreach \i in {a,b,c,d} {%
+            \expandafter\xdef\csname @@\i\endcsname{\randint29}%
+        }%
+        {\renewcommand{\arraystretch}{1}\begin{tabular}{c}Déterminer l'écriture\\scientifique de\\$\@@a\@@b\mathord,\@@c\times 10^{-3}+\@@d\times 10^2$\end{tabular}}
+        & $ \@@d,000\,\@@a\@@b\@@c\times 10^2$ \\
+    \hline
+        \foreach \i in {p,q,r} {%
+            \expandafter\xdef\csname @@\i\endcsname{\randint37}%
+        }%
+        \xdef\@@a{\the\numexpr\@@p*\@@r}%
+        \xdef\@@b{\the\numexpr\@@p*\@@q}%
+        \foreach \i in {ea,eb,ec} {%
+            \expandafter\xdef\csname @@\i\endcsname{\randint37}%
+        }%
+        {\renewcommand{\arraystretch}{1}\begin{tabular}{c}Déterminer l'écriture\\scientifique de\\$\frac{\num{\fpeval{\@@a/10}}\times10^\@@ea\times\@@q\times10^\@@eb}{\num{\fpeval{\@@b/10}}\times10^{-\@@ec}}$\end{tabular}}
+        & $\@@r\times10^{\the\numexpr\@@ea+\@@eb+\@@ec}$ \\
+    \hline
+        \GENINT{a,b,c,d,e,f,g}%
+    $(\@@a-\@@b\times\@@c)(-\@@d\times\@@e+\@@f-\@@g)$ &  $\fpeval{(\@@a-\@@b*\@@c)*(-\@@d*\@@e+\@@f-\@@g)}$  \\
+    \hline
+        \GENINT{a}%
+    $\sqrt{(-\@@a)^2}$ &  $\@@a$  \\
+    \hline
+        \xdef\@@a{\cchoose{2,3}}%
+        \xdef\@@b{\randint25}
+        \xdef\@@ea{\randint23}%
+    $\@@a^{2^2} - \@@b^\@@ea$ &  $\fpeval{\@@a^4-\@@b^\@@ea}$  \\
+    \hline
+        \xdef\@@p{\cchoose{3,5}}%
+        \xdef\@@s{\cchoose{+,-}}%
+        \GENINT{a,b,c}%
+    $\frac{\@@a\sqrt{\the\numexpr\@@p*\@@p*\@@p}\@@s\@@b\sqrt{\@@p}}{\@@c\sqrt{\@@p}}$ & $\Frac{(\@@p*\@@a\@@s\@@b)/\@@c}$  \\
+    \hline
+        \xdef\@@max{\randint35}%
+        \xdef\@@ea{\randint23}%
+        \xdef\@@n{1^\@@ea}%
+        \xdef\@@d{1}%
+        \foreach \i in {2,...,\@@max} {%
+            \xdef\@@n{\@@n+\i^\@@ea}%
+            \xdef\@@d{\@@d+\i}%
+        }%
+    $\frac{\@@n}{\@@d}$ &  $\Frac{\@@n/\@@d}$  \\
+    \hline
+        \GENINT{a,b}%
+        \xdef\@@c{\randint24}%
+    $-(-\@@a)^2+(-\@@b)^2+(-\@@c)^3$ &  $\fpeval{-\@@a*\@@a+\@@b*\@@b-\@@c*\@@c*\@@c}$  \\
+    \hline
+        \GENINT{a,d}%
+        \xdef\@@b{\randint{30}{60}}%
+        \xdef\@@c{\randint{30}{60}}%
+    $\sqrt{\the\numexpr\@@a*\@@a}-(\@@b-\@@c)\times\sqrt{\the\numexpr\@@d*\@@d}$ &  $\fpeval{\@@a-(\@@b-\@@c)*\@@d}$  \\
+    \hline
+        \xdef\@@ea{\randint9{13}}%
+    $2^{\@@ea}$ &  $\fpeval{2^\@@ea}$  \\
+    \hline
+        \xdef\@@a{\irrfrac3939}%
+        \GENINT{b,c}%
+    $\Frac{\@@a}-\sqrt{\the\numexpr\@@b*\@@b}\sqrt{\the\numexpr\@@c*\@@c}$ &  $\Frac{\@@a-\@@b*\@@c}$  \\
+    \hline
+        \GENINT{a,b,c}%
+    $\@@a+\@@b-\@@c\times(\randint29-\randint{12}{19}\times\randint29)^0$ &  $\fpeval{\@@a+\@@b-\@@c}$  \\
+    \hline
+\end{tabular}}
+\vspace*{\fill}
+
+
+\addblankpage
+
+\def\INTS[#1:#2]#3{%
+    \foreach \i in {#3} {%
+        \expandafter\xdef\csname @@\i\endcsname{\randint{#1}{#2}}%
+    }%
+}
+
+\section{Calcul littéral}
+
+\topskip0pt
+\vspace*{\fill}
+\hspace*{-1cm}
+{\renewcommand{\arraystretch}{1.4}
+\renewcommand{\addcellspace}{0cm}
+\begin{tabular}{|c|S|}
+    \hline \thead{Développer et réduire} & \thead{Réponse} \\
+    \hline
+        \INTS[2:6]{a,b}%
+    $(\@@a x - \@@b)^2$&  $\the\numexpr\@@a*\@@a x^2-\the\numexpr2*\@@a*\@@b x+\the\numexpr\@@b*\@@b$\\
+    \hline
+        \INTS[2:3]{a,b,d}%
+        \INTS[1:2]{c,e}%
+    $ (\@@a x^2 + \@@b x +\@@c)(\@@d x +\@@e)^2$ & \footnotesize$ \fpeval{\@@a*\@@d^2}x^4+\fpeval{2*\@@a*\@@d*\@@e+\@@b*\@@d^2}x^3+\fpeval{\@@a*\@@e^2+2*\@@b*\@@d*\@@e+\@@c*\@@d^2}x^2+\fpeval{\@@b*\@@e^2+2*\@@c*\@@d*\@@e}x+\fpeval{\@@c*\@@e^2}$\normalsize\\
+    \hline
+        \INTS[2:4]{a,c,e}%
+        \INTS[1:3]{b,d,f}%
+    $ (\@@a x +\@@b)(\@@c x +\@@d)(\@@e x +\@@f)$& \footnotesize$\fpeval{\@@e*\@@a*\@@c}x^3+\fpeval{\@@a*\@@c*\@@f+\@@e*\@@a*\@@d+\@@e*\@@b*\@@c}x^2+\fpeval{\@@a*\@@d*\@@f+\@@b*\@@c*\@@f+\@@e*\@@b*\@@d}x+\fpeval{\@@b*\@@d*\@@f}$\normalsize\\
+    \hline
+        \INTS[2:5]{a}%
+        \INTS[1:6]{b}%
+    $ (\@@a x - \@@b)^3$& \small$\fpeval{\@@a^3}x^3-\fpeval{3*\@@a^2*\@@b}x^2+\fpeval{3*\@@a*\@@b^2}x-\fpeval{\@@b^3} $\normalsize\\
+    \hline
+        \INTS[2:3]{a,b,d}%
+        \INTS[1:2]{c,e}%
+    $(\@@d x +\@@e)^2(\@@b x + \@@a x^2 +\@@c)$ & \footnotesize$ \fpeval{\@@a*\@@d^2}x^4+\fpeval{2*\@@a*\@@d*\@@e+\@@b*\@@d^2}x^3+\fpeval{\@@a*\@@e^2+2*\@@b*\@@d*\@@e+\@@c*\@@d^2}x^2+\fpeval{\@@b*\@@e^2+2*\@@c*\@@d*\@@e}x+\fpeval{\@@c*\@@e^2}$\normalsize\\
+    \hline
+        \INTS[3:9]{a,b}%
+    $\@@a(x+\@@b)$ & $\@@a x+\the\numexpr\@@a*\@@b $\\ 
+    \hline
+        \INTS[2:9]{a,b,c}%
+    $-\@@a(\@@b x-\@@c)$ & $-\the\numexpr\@@a*\@@b x+\the\numexpr\@@a*\@@c$\\ 
+    \hline
+        %\PMSIGN{1+2}
+        \INTS[2:4]{a,c}%
+        \INTS[1:6]{b,d}%
+    $(\@@a x+\@@b)(\@@c x+\@@d)$ & $\fpeval{\@@a*\@@c}x^2+\fpeval{\@@a*\@@d+\@@b*\@@c}x+\fpeval{\@@b*\@@d} $\\ 
+    \hline
+        %\PMSIGN{1+2}
+        \INTS[2:4]{a,c}%
+        \INTS[1:6]{b,d}%
+    $(\@@a x-\@@b)(\@@c x-\@@d)$ & $\fpeval{\@@a*\@@c}x^2-\fpeval{\@@a*\@@d+\@@b*\@@c}x+\fpeval{\@@b*\@@d} $\\ 
+    \hline
+        \INTS[2:6]{a,c}%
+        \INTS[1:5]{b,d,e}%
+    $-\@@a(x+\@@b)^2-(\@@c x+\@@d)(x-\@@e)$ & $\fpeval{-\@@a - \@@c}x^2\PMSIGN{-2*\@@a*\@@b + \@@c*\@@e - \@@d}x\PMSIGN{-\@@a*\@@b**2 + \@@d*\@@e}$\\ 
+    \hline
+        \INTS[2:6]{b,c,d}%
+    $(x+\@@b)(\@@c x-\@@d)$ & $\fpeval{\@@c}x^2\PMSIGN{\@@b*\@@c - \@@d}x\PMSIGN{-\@@b*\@@d}$\\ 
+    \hline
+        \INTS[2:6]{a,b,c,d,e,g}%
+    $(\@@a x-\@@b)(\@@c x+\@@d)-(\@@e x-\@@f)$ & $\fpeval{\@@a*\@@c}x^2\PMSIGN{\@@a*\@@d - \@@b*\@@c - \@@e}x\PMSIGN{-\@@b*\@@d + \@@f}$\\ 
+    \hline
+        \INTS[2:9]{a,b}%
+    $(\@@a x-\@@b)^2$ & $\fpeval{\@@a**2}x^2\PMSIGN{-2*\@@a*\@@b}x\PMSIGN{\@@b**2}$\\ 
+    \hline
+        \INTS[2:9]{a}%
+        \INTS[1:9]{b}%
+    $(\@@a x+\@@b)(\@@a x-\@@b)$ & $\fpeval{\@@a**2}x^2\PMSIGN{-\@@b**2}$\\ 
+    \hline
+        \INTS[2:5]{a,b}%
+    $(x+\@@a)^2(x-\@@a)^2$ & $x^4\PMSIGN{-2*\@@a**2}x^2\PMSIGN{\@@a**4}$\\  
+    \hline
+        \INTS[2:9]{a,b,c}%
+    $-\@@a x(\@@b-\@@c x)$& $\fpeval{\@@a*\@@c}x^2\PMSIGN{-\@@a*\@@b}x$\\ 
+    \hline
+        \INTS[2:6]{a,c}%
+        \INTS[1:5]{b,d}%
+    $(\@@a x-\@@b)(-\@@c x+\@@d)$& $\fpeval{-\@@a*\@@c}x^2\PMSIGN{\@@a*\@@d + \@@b*\@@c}x\PMSIGN{-\@@b*\@@d}$\\ 
+    \hline
+        \INTS[2:6]{a,b,c}%
+    $\@@a(x+\@@b)(x+\@@c)$& $\fpeval{\@@a}x^2\PMSIGN{\@@a*\@@b + \@@a*\@@c}x\PMSIGN{\@@a*\@@b*\@@c}$\\ 
+    \hline
+        \INTS[2:9]{a,b}%
+    $\@@a(x+\@@b)^2$& $\fpeval{\@@a}x^2\PMSIGN{2*\@@a*\@@b}x\PMSIGN{\@@a*\@@b**2}$\\ 
+    \hline
+        \INTS[2:5]{a,b,c}%
+    $(x+\@@a)^2(\@@b x-\@@c)$& $\fpeval{\@@b}x^3\PMSIGN{2*\@@a*\@@b - \@@c}x^2\PMSIGN{\@@a**2*\@@b - 2*\@@a*\@@c}x\PMSIGN{-\@@a**2*\@@c}$\\  
+    \hline
+        \INTS[2:9]{a,b,c}%
+    $-\@@a(\@@b x+\@@c)$&  $\fpeval{-\@@a*\@@b}x\PMSIGN{-\@@a*\@@c}$  \\
+    \hline
+        \INTS[2:9]{a,b,c}%
+    $(-\@@a x+\@@b)\times(-\@@c)$&  $\fpeval{\@@a*\@@c}x\PMSIGN{-\@@b*\@@c}$  \\
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $(\@@a x+\@@b)(\@@c x-\@@d)$&  $\fpeval{\@@a*\@@c}x^2\PMSIGN{-\@@a*\@@d + \@@b*\@@c}x\PMSIGN{-\@@b*\@@d}$  \\
+    \hline
+        \INTS[2:9]{a,b}%
+    $(\@@a x+\@@b)^2$&  $\fpeval{\@@a**2}x^2\PMSIGN{2*\@@a*\@@b}x\PMSIGN{\@@b**2}$  \\
+    \hline
+        \INTS[2:9]{a,b}%
+    $(\@@a x-\@@b)^2$&  $\fpeval{\@@a**2}x^2\PMSIGN{-2*\@@a*\@@b}x\PMSIGN{\@@b**2}$  \\
+    \hline
+\end{tabular}}
+\hfill
+{\renewcommand{\arraystretch}{1.4}
+\renewcommand{\addcellspace}{0cm}
+\begin{tabular}{|c|S|}
+    \hline \thead{Factoriser} & \thead{Réponse} \\
+    \hline
+        \INTS[2:9]{a,b}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{-2*\@@a*\@@b}x\PMSIGN{\@@b**2}$& $(\@@a x-\@@b)^2$ \\
+    \hline
+        \INTS[9:12]{a,b}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{-\@@b**2}$ &\footnotesize $(\@@a x-\@@b)(\@@a x+\@@b)$ \normalsize\\
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $(\@@a x-\@@b)(-\@@c x+\@@d)-(\@@a x-\@@b)$& $(\@@a x-\@@b)(\fpeval{-\@@c}x\PMSIGN{\@@d - 1})$ \\
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{-\@@b**2} + (\@@a x - \@@b)(\@@c x+ \@@d)$ & $(\@@a x-\@@b)(\fpeval{\@@a + \@@c}x\PMSIGN{\@@b + \@@d})$ \\
+    \hline
+        \INTS[2:9]{a,b,c}%
+        
+    $(\@@a x -\@@b)x + (\the\numexpr\@@c*\@@a x - \the\numexpr\@@c*\@@b)$& $(\@@a x-\@@b)(x+\@@c)$ \\
+    \hline
+        \INTS[2:9]{a,b,c,d}
+    \small$(x+\@@a)(x+\@@b)+(x+\@@b)(\@@c x-\@@d)$\normalsize & $(x+\@@b)(\fpeval{\@@c + 1}x\PMSIGN{\@@a - \@@d})$ \\ 
+    \hline
+        \INTS[2:9]{a}%
+    $\@@a x^2+\the\numexpr\@@a*\@@a x$ & $\@@a x(x+\@@a)$ \\ 
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $(\@@a x-\@@b)x-x(\@@d-\@@c x)$ & $x(\fpeval{\@@a + \@@c}x\PMSIGN{-\@@b - \@@d})$ \\ 
+    \hline
+        \INTS[9:12]{a,b}%
+    $\fpeval{-\@@a**2}x^2\PMSIGN{\@@b**2}$ &\footnotesize $(-\@@a x+\@@b)(\@@a x+\@@b)$ \normalsize\\
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    \footnotesize$x(x+\@@a)^2(x-\@@b)-x(\@@c x+\@@d)(x-\@@b)$  \normalsize&\footnotesize $x(x-\@@b)(x^2\PMSIGN{2*\@@a - \@@c}x\PMSIGN{\@@a**2 - \@@d})$ \normalsize\\ 
+    \hline
+        \INTS[4:8]{a,b}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{-\@@b**2}$ & $(\@@a x-\@@b)(\@@a x+\@@b)$ \\ 
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $(\@@a x+\@@b)(x+\@@c)-\@@d x-\the\numexpr\@@c*\@@d$  & $(x+\@@c)(\fpeval{\@@a}x\PMSIGN{\@@b - \@@d})$ \\ 
+    \hline
+        \INTS[2:9]{a}%
+    $\@@a x^3+\the\numexpr\@@a*\@@a x^2$ & $\@@a x^2(x+\@@a)$ \\ 
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{-\@@b**2}+(\@@a x+\@@b)(\@@c x+\@@d)$ & $(\@@a x+\@@b)(\fpeval{\@@a + \@@c}x\PMSIGN{-\@@b + \@@d})$ \\ 
+    \hline
+        \INTS[2:9]{a,b}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{-2*\@@a*\@@b}x\PMSIGN{\@@b**2}$& $(\@@a x-\@@b)^2$ \\
+    \hline
+        \INTS[2:9]{a}%
+    $-\@@a x^2+\the\numexpr2*\@@a x$ & $-\@@a x(x-2)$ \\ 
+    \hline
+        \INTS[2:6]{a,b,d}%
+        \INTS[7:9]{c}%
+    $\@@a(x+\@@b)^2-(x+\@@b)(\@@c x-\@@d)$& $(x+\@@b)(\fpeval{\@@a - \@@c}x\PMSIGN{\@@a*\@@b + \@@d})$ \\
+    \hline
+        \INTS[2:9]{b,c}%
+        \INTS[2:5]{a}%
+    $\fpeval{\@@a*\@@b**2}x^2\PMSIGN{-\@@a*\@@c**2}$& $\@@a(\@@b x-\@@c)(\@@b x+\@@c)$ \\
+    \hline
+        \INTS[2:9]{a,b}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{-2*\@@a*\@@b}x\PMSIGN{\@@b**2}$& $(\@@a x-\@@b)^2$ \\
+    \hline
+        \xdef\@@a{\cchoose{3,5,6,7,11,13}}%
+    $x^2-\@@a$&\footnotesize $(x-\sqrt{\@@a})(x+\sqrt{\@@a})$ \normalsize\\
+    \hline
+        \INTS[2:9]{a,b,d,f}%
+        \INTS[2:5]{c}%
+        \INTS[6:9]{e}%
+    \footnotesize$(\@@a x-\@@b)(\@@c x+\@@d)-(\@@e x+\@@f)(\@@a x-\@@b)$ \normalsize&  $(\@@a x-\@@b)(\fpeval{\@@c - \@@e}x\PMSIGN{\@@d - \@@f})$  \\
+    \hline
+        \INTS[2:9]{a,b}%
+    $\@@a x^2-\the\numexpr\@@b*\@@a x$ & $\@@a x(x-\@@b)$ \\ 
+    \hline
+        \INTS[2:9]{a,b}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{2*\@@a*\@@b}x\PMSIGN{\@@b**2}$& $(\@@a x+\@@b)^2$ \\
+    \hline
+        \INTS[2:9]{a}%
+    $x^2\PMSIGN{-2*\@@a}x\PMSIGN{\@@a**2}$&  $(x-\@@a)^2$  \\
+    \hline
+        \INTS[11:20]{a}%
+        \INTS[2:6]{b,c}%
+    $\fpeval{\@@a*\@@b**2}x^2\PMSIGN{-\@@a*\@@c**2}$&  $\@@a(\@@b x-\@@c)(\@@b x+\@@c)$  \\
+    \hline
+\end{tabular}}
+\vspace*{\fill}
+
+\clearpage
+\topskip0pt
+\vspace*{\fill}
+\hspace*{-1cm}
+{\renewcommand{\arraystretch}{2.75}
+\renewcommand{\addcellspace}{0cm}
+\begin{tabular}{|c|S|}
+    \hline \thead{Résoudre pour $x$} & \thead{Réponse} \\
+    \hline
+        \INTS[2:9]{a}%
+    $x-\@@a=0$&  $x=\@@a$\\
+    \hline
+        \INTS[2:9]{a,b}%
+    $x+\@@a=-\@@b$&  \hspace{1cm}$x=\fpeval{-\@@b-\@@a}$\hspace{1cm}\\
+    \hline
+        \INTS[2:9]{a,b}%
+    $\@@a x-\@@b=0$&  $x=\Frac{\@@b/\@@a}$ \\
+    \hline
+        \INTS[2:9]{a,b,c}%
+    $\@@a x+\@@b=\@@c$&  $x=\Frac{(\@@c-\@@b)/\@@a}$\\
+    \hline
+        \INTS[2:9]{a,b,c}%
+    $-\@@a x+\@@b=-\@@c$&  $x=\Frac{(\@@b+\@@c)/\@@a}$\\
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $\@@a x+\@@b=-\@@c x+\@@d$&  $x=\Frac{(\@@d-\@@b)/(\@@a+\@@c)}$\\
+    \hline
+        \INTS[2:9]{a,c}%
+        \INTS[10:15]{b,d}%
+    $-\@@a x-\@@b=\@@c-\@@d x$&  $x=\Frac{(\@@c+\@@b)/(\@@d-\@@a)}$\\
+    \hline
+        \INTS[2:9]{a,c}%
+        \INTS[10:15]{b,d}%
+    $\@@c+\@@d x=\@@a x-\@@b$&  $x=\Frac{(\@@c+\@@b)/(\@@a-\@@d)}$\\
+    \hline
+        \foreach \i in {a,b,c} {%
+            \expandafter\xdef\csname @@\i\endcsname{\irrfrac1924}%
+        }%
+    $\Frac{\@@a}x+\Frac{\@@b}=\Frac{\@@c}$&  $x=\Frac{(\@@c-\@@b)/\@@a}$\\
+    \hline
+        \foreach \i in {a,b,c} {%
+            \expandafter\xdef\csname @@\i\endcsname{\irrfrac1414}%
+        }%
+    $\Frac{\@@a}x-\Frac{\@@b}=\Frac{\@@c}$&  $x=\Frac{(\@@c+\@@b)/\@@a}$\\
+    \hline
+        \foreach \i in {a,b,c,d} {%
+            \expandafter\xdef\csname @@\i\endcsname{\irrfrac1414}%
+        }%
+    $\Frac{\@@a}x+\Frac{\@@b}=-\Frac{\@@c}x-\Frac{\@@d}$&  $x=\Frac{(-\@@b-\@@d)/(\@@a+\@@c)}$\\
+    \hline
+        \foreach \i in {a,b,c,d} {%
+            \expandafter\xdef\csname @@\i\endcsname{\irrfrac1414}%
+        }%
+    $-\Frac{\@@b}-\Frac{\@@a}x=\Frac{\@@c}x+\Frac{\@@d}$&  $x=\Frac{(-\@@b-\@@d)/(\@@a+\@@c)}$\\
+    \hline
+        \INTS[9:15]{a}%
+        \INTS[2:9]{b,c,d,g}%
+        \INTS[2:5]{e,f}%
+    \small$\@@a(\@@b x-\@@c)+\@@d-\@@e x=\@@f x-\@@g$\normalsize&  $x=\Frac{(\@@a*\@@c - \@@d + \@@g)/(\@@a*\@@b - \@@e - \@@f)}$\\
+    \hline
+        \INTS[9:15]{a}%
+        \INTS[2:9]{b,c,d,g}%
+        \INTS[2:5]{e,f}%
+    \small$\@@d-\@@e x-\@@a(\@@c-\@@b x)=-\@@g+\@@f x$\normalsize&  $x=\Frac{(\@@a*\@@c - \@@d + \@@g)/(\@@a*\@@b - \@@e - \@@f)}$\\
+    \hline
+        \INTS[2:9]{a,b}%
+    $\frac{\@@a x-\@@b}{\randint29x+\randint19}=0$&  $x=\Frac{\@@b/\@@a}$\\
+    \hline
+        \INTS[2:9]{a,b}%
+    $\frac{\@@a x-\@@b}{\randint29x+\randint19}=0$&  $x=\Frac{\@@b/\@@a}$\\
+    \hline
+\end{tabular}}
+\hfill
+{\renewcommand{\arraystretch}{2.75}
+\renewcommand{\addcellspace}{0cm}
+\begin{tabular}{|c|S|}
+    \hline \thead{Résoudre pour $x$} & \thead{Réponse} \\
+    \hline
+        \INTS[2:4]{a,b,c,d}%
+    $(\@@a x-\@@b)(x+\@@c)-\@@a x^2=\@@d$&  $x=\Frac{(\@@b*\@@c+\@@d)/(\@@a*\@@c-\@@b)}$\\
+    \hline
+        \INTS[2:9]{a,b,c,d}%
+    $(\@@a x-\@@b)(x+\@@c)-\@@a x^2=\@@d$&  $x=\Frac{(\@@b*\@@c+\@@d)/(\@@a*\@@c-\@@b)}$\\
+    \hline
+        \INTS[2:5]{a,b}%
+    $(\@@a x-\@@b)^3-x^2(\fpeval{\@@a^3}x\PMSIGN{-3*\@@a**2*\@@b})=0$&  $x=\Frac{\@@b*\@@b*\@@b/(3*\@@a*\@@b*\@@b)}$\\
+    \hline
+        \INTS[2:4]{p,q,r}%
+        \xdef\@@a{\the\numexpr\@@p*\@@q}%
+        \xdef\@@c{\the\numexpr\@@q*\@@r}%
+        \xdef\@@e{\the\numexpr\@@p*\@@r}%
+        \xdef\@@g{\the\numexpr\@@r*\@@r}%
+        \INTS[2:5]{b,d,f,h}%
+    $\frac{\@@a x+\@@b}{\@@c x-\@@d}=\frac{\@@e x-\@@f}{\@@g x+\@@h}$&  $x=\Frac{-(\@@b*\@@h + \@@d*\@@f)/(\@@a*\@@h + \@@b*\@@g - \@@c*\@@f + \@@d*\@@e)}$\\
+    \hline
+        \INTS[2:9]{a,b,c}%
+    $(x-\@@a)(\@@b x+\@@c)=0$&  $x=\@@a$ ou $x=\Frac{-\@@c/\@@b}$\\
+    \hline
+        \INTS[7:12]{a,b,c}%
+    $(\@@b x+\@@c)^2(x-\@@a)=0$&  $x=\@@a$ ou $x=\Frac{-\@@c/\@@b}$\\
+    \hline
+        \foreach \i in {a,b,c} {%
+            \expandafter\xdef\csname @@\i\endcsname{\irrfrac1919}%
+        }%
+    $\left(x-\Frac{\@@a}\right)\left(\Frac{\@@b}x+\Frac{\@@c}\right)=0$&  $x=\Frac{\@@a}$ ou $x=\Frac{-(\@@c)/(\@@b)}$\\
+    \hline
+        \INTS[2:4]{a,b,c,d}
+    \small$(x+\@@a)(x+\@@b)+(x+\@@b)(\@@c x-\@@d)=0$\normalsize & $x=-\@@b$ ou $x=\Frac{-(\@@a - \@@d)/(\@@c + 1)}$ \\ 
+    \hline
+        \INTS[2:4]{a,b,c,d}
+    \small$(x-\@@a)(x+\@@b)+(\@@c x-\@@d)(x+\@@b)=0$\normalsize & $x=-\@@b$ ou $x=\Frac{(\@@a + \@@d)/(\@@c + 1)}$ \\ 
+    \hline
+        \INTS[5:9]{a,b,c,d}
+    \small$(x-\@@a)(x+\@@b)-(x+\@@b)(\@@c x-\@@d)=0$\normalsize & $x=-\@@b$ ou $x=\Frac{(\@@d - \@@a)/(\@@c - 1)}$ \\ 
+    \hline
+        \INTS[2:9]{a}%
+    $x^2\PMSIGN{-2*\@@a}x\PMSIGN{\@@a**2}=0$&  $x=\@@a$\\
+    \hline
+        \INTS[2:5]{a,b}%
+    $\fpeval{\@@a**2}x^2\PMSIGN{2*\@@a*\@@b}x=\fpeval{-\@@b**2}$&  $x=\Frac{-\@@b/\@@a}$\\
+    \hline
+        \INTS[2:4]{a}%
+        \xdef\@@b{\cchoose{5,7,11}}%
+    $\the\numexpr\@@a*\@@a x-\@@b=0$&  \small$x=-\frac{\sqrt{\@@b}}{\@@a}$ ou $x=\frac{\sqrt{\@@b}}{\@@a}$\normalsize\\
+    \hline
+        \INTS[2:4]{a}%
+    $x^3-\fpeval{\@@a^3}=0$&  $x=\@@a$\\
+    \hline
+        \INTS[2:4]{a}%
+    $\fpeval{\@@a^4}-x^4=0$&  $x=-\@@a$ ou $x=\@@a$\\
+    \hline
+        \INTS[2:3]{a}%
+        \INTS[1:2]{b}%
+        \INTS[3:4]{c}%
+    $\fpeval{\@@a}x^2\PMSIGN{-\@@a*\@@b + \@@a*\@@c}x\PMSIGN{-\@@a*\@@b*\@@c}$&  $x=\@@b$ ou $x=-\@@c$\\
+    \hline
+\end{tabular}}
+\vspace*{\fill}
+
+\end{document}
